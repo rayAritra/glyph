@@ -545,6 +545,17 @@ function SidebarMenuButton({
   )
 }
 
+/**
+ * Render a positioned action control for a sidebar menu item.
+ *
+ * The control is visually positioned at the top-right of the menu item and
+ * includes responsive hit-area and visibility behaviors for different sizes and
+ * collapsible states.
+ *
+ * @param asChild - When true, render using `Slot.Root` so a consumer-provided element is used instead of a native `button`.
+ * @param showOnHover - When true, the control is hidden by default and becomes visible on hover, focus-within, active, or when the menu is open; otherwise it remains visible.
+ * @returns A `button` element (or a `Slot.Root`-wrapped element when `asChild` is true) that acts as the action control for a sidebar menu item.
+ */
 function SidebarMenuAction({
   className,
   asChild = false,
