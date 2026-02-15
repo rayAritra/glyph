@@ -1,17 +1,43 @@
 import { inngest } from "./client";
 import { generateText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { firecrawl } from "@/lib/firecrawl";
+const URL_REGEX = /https?:\/\/[^\s]+/g;
+
+
+
+
 const google = createGoogleGenerativeAI({
-    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || "AIzaSyChOxcM089yt-9I72LukzIARhk0O2uxgvA"
+    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY 
 })
 export const demoGenerate = inngest.createFunction(
     { id: "demo-generate" },
     { event: "demo/generate" },
-    async ({ step }) => {
+    async ({ event, step }) => {
+        const {prompt} = event.data as {prompt: string};
+        const urls = await step.run("excute-urls", async ()=> {
+                return prompt.match(URL_REGEX) || [];
+
+        }) as string[];
+
+        const scrapedContent = await step.run("scrape-urls", async ()=> {
+            const results = await Promise.all(
+                urls.map(async (url)=> {
+                const result = await firecrawl.scrape(
+                    url ,
+                    {formats: ["markdown"]}
+                );
+                return result.markdown ?? null;
+            })
+        );
+        return results.filter(Boolean).join("\n\n");
+        });
+        const finalPrompt = scrapedContent ? `Context:\n${scrapedContent}\n\nQuestion: ${prompt}` : prompt;
+
         await step.run("generate-text", async () => {
             return await generateText({
                 model: google("gemini-flash-latest"),
-                prompt: "Write a vegetarian lasagna recipe for 4 people.",
+                prompt: finalPrompt,
             })
         })
 
