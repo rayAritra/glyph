@@ -10,6 +10,12 @@ export async function POST() {
         const { text } = await generateText({
             model: google('gemini-flash-latest'),
             prompt: 'Write a vegetarian lasagna recipe for 4 people.',
+            experimental_telemetry : {
+                isEnabled: true,
+                recordInputs: true,
+                recordOutputs: true,
+                
+            }
         });
         return Response.json({ text });
     } catch (error: any) {
